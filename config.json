@@ -3,5 +3,6 @@
     "maxinterval": 10,
     "multiplier": 1000,
     "maxopt": 3,
-    "predictionFuture": 2
+    "predictionFuture": 2,
+    "timeInMs": false
 }

@@ -1,17 +1,18 @@
 CC=c++
 CCFLAGS=-std=c++0x -march=native -Wall -g -O3
 
-all: parser.o node.o graph.o
-	$(CC) $(CCFLAGS) node.o graph.o parser.o -o main
+all: parser.o node.o graph.o config.o jsoncpp.o
+	$(CC) $(CCFLAGS) node.o graph.o parser.o jsoncpp.o config.o -o main
 parser.o: parser.cpp
 	$(CC) $(CCFLAGS) -c parser.cpp
-taxi_parser.o: taxi_parser.cpp
-	$(CC) $(CCFLAGS) -c taxi_parser.cpp
 node.o: node.cpp
 	$(CC) $(CCFLAGS) -c node.cpp
 graph.o: graph.cpp graph.hpp
 	$(CC) $(CCFLAGS) -c graph.cpp
-taxi: taxi_parser.o node.o graph.o
-	$(CC) $(CCFLAGS) node.o graph.o taxi_parser.o -o taxi_parser
+config.o: config.cpp config.hpp
+	$(CC) $(CCFLAGS) -c config.cpp
+jsoncpp.o: jsoncpp.cpp json/json.h
+	$(CC) $(CCFLAGS) -c jsoncpp.cpp
+
 clean:
-	rm -Rf *.o main
+	rm -Rf *~ node.o graph.o parser.o config.o main

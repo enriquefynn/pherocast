@@ -12,5 +12,6 @@ Config::Config(std::string filestr)
     multiplier = root["multiplier"].asInt();
     maxopt = root["maxopt"].asInt();
     predictionFuture = root["predictionFuture"].asInt();
+    timeInMs = root["timeInMs"].asBool();
     ifs.close();
 }
