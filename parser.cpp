@@ -1,6 +1,8 @@
 #include <iostream>
 #include <chrono>
 #include <cmath>
+#include <fstream>
+#include <unistd.h>
 
 #include "graph.hpp"
 #include "node.hpp"
@@ -13,13 +15,42 @@ int main(int argc, char* argv[])
     long ts, lastTs, timeToNextData;
     double xl, yl;
     bool makingNewTrip = false;
+    char opt;
+    std::string configPath, fileName;
+    
+    configPath = "config.json";
+    fileName = "default";
+    std::ofstream statFile;
+
+    while ((opt = getopt(argc, argv, "c:n:")) != -1)
+	{
+		switch(opt)
+		{
+			case 'c':
+                configPath = optarg;
+                break;
+            case 'n':
+                fileName = optarg;
+                break;
+			default:
+				puts("Receives the input from stdin\n\
+					Options:\n\
+						\t-c <config>: Config file\n\
+						\t-n <file name>: File name\n\
+						 ");
+				exit(1);
+		}
+    }
+
+    //Time test
+    std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
 
     Graph *g = new Graph();
     Node *node = new Node(0, 0, 'N', 0), *oldNode = new Node(0, 0, 'N', 0), *predictionNode = new Node(0, 0, 'N', 0);
     Config *config;
     try
     {
-        config = new Config(argv[1]);
+        config = new Config(configPath);
     }
     catch(const std::exception& e)
     {
@@ -40,8 +71,13 @@ int main(int argc, char* argv[])
     }
     std::cerr << *config << std::endl;
     lastX = lastY = lastTs = lastTrip = yday = 0;
-    timeToNextData = config->interval;
+    timeToNextData = config->maxinterval;
     tripID = 0;
+
+    if (config->testTime)
+        statFile.open(fileName + ".time");
+    else if (config->testSize)
+        statFile.open(fileName + ".size");
 
     while(std::cin >> ts >> xl >> yl)
     {
@@ -70,7 +106,14 @@ int main(int argc, char* argv[])
         //Try to predict
         if (timeToNextData > config->maxFuture)
             timeToNextData = config->maxFuture;
+
+        if (config->testTime)
+            startTime = std::chrono::high_resolution_clock::now();
         auto prediction = g->predictNexts(g->getNode(node), node->getAvgWait(), timeToNextData, tripID, phero::NOCIRCLE);
+        if (config->testTime)
+            statFile << std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
+
         
         predictionNode->set(node->getX(), node->getY(), node->getDirection());
         //Get the correct node to compare/predict

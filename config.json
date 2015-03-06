@@ -3,8 +3,8 @@
     "maxinterval": 10,      //Maximum expected intervals
     "multiplier": 1000,     //Multiplier for X,Y coords
     "maxopt": 3,            //Maximum options considered
-    "maxFuture": 100,       //Maximum depth in seconds
+    "maxFuture": 1,         //Maximum depth in seconds
     "timeInMs": false,      //Is the EPOCH in milliseconds?
-    "testTime": false,      //Test for time?
+    "testTime": true,       //Test for time?
     "testSize": false       //Test for size?
 }
