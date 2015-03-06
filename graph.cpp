@@ -4,6 +4,13 @@
 #include <algorithm>
 #include "graph.hpp"
 
+Node* Graph::getNode(Node* node)
+{
+    if (!allNodes.count(node->getID()))
+        return NULL;
+    return allNodes[node->getID()];
+}
+
 void Graph::createNode(Node *node, int tripN)
 {
     Node *newNode = new Node(node->getX(), node->getY(), node->getDirection(), tripN);
@@ -65,14 +72,16 @@ void Graph::startNewTrip(Node *node, int tripN)
 */
 std::vector<Node*> Graph::dfs(std::unordered_map<Node*, bool> &visited, Node *node, double maxT, double localT, unsigned int flags)
 {
-    //std::cout << "ENTERING: " << *node << std::endl;
     std::vector<Node*> probNodes;
-    if ((flags & phero::COUNTCIRCLE) == phero::COUNTCIRCLE)
+    if (node == NULL)
+        return probNodes;
+    if ((flags & phero::NOCIRCLE) == phero::NOCIRCLE)
     {
         if (visited[node])
             return probNodes;
         visited[node] = true;
     }
+    //std::cout << "ENTERING: " << *node << " MaxT: " << maxT << " LocalT: " << localT << " AVG: " << node->getAvgWait() << std::endl;
 	if (node->getAvgWait() + localT > maxT)
     {
         probNodes.push_back(node);
@@ -97,13 +106,15 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
     std::vector<std::pair<double, Node*>> probPairs;
     std::vector<Node*> probNodes = dfs(visited, node, maxT, 0, flags);
 	double all = 0;
+    //std::cout << "HAS NODES: " << std::endl;
 	for (auto no : probNodes)
 	{
+        //std::cout << "NODE: " << *no << std::endl;
 		no->visit(tripID);
 		all+= no->timeCoef;
 	}
 	for (auto no : probNodes)
-		probPairs.push_back(std::make_pair(node->timeCoef/all, no));
+		probPairs.push_back(std::make_pair(no->timeCoef/all, no));
 	sort(probPairs.begin(),probPairs.end());
     //std::cout << "PREDICTIC: ";
     //for (auto pair: probPairs)

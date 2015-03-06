@@ -30,7 +30,7 @@ public:
 
 	void print();
     
-    inline Node* getNode(Node* node){return allNodes[node->getID()];}
+    Node* getNode(Node* node);
 
     std::vector<std::pair<double, Node*>> predictNexts(Node* node, double timeSpentHere, double maxT, int tripID, unsigned int flags);
 

@@ -11,7 +11,11 @@ Config::Config(std::string filestr)
     maxinterval = root["maxinterval"].asInt();
     multiplier = root["multiplier"].asInt();
     maxopt = root["maxopt"].asInt();
-    predictionFuture = root["predictionFuture"].asInt();
+    maxFuture = root["maxFuture"].asInt();
     timeInMs = root["timeInMs"].asBool();
+    testTime = root["testTime"].asBool();
+    testSize = root["testSize"].asBool();
+    if (testTime && testSize)
+        throw "ERROR: Can\'t test both size and time (testTime and testSize)";
     ifs.close();
 }
