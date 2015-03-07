@@ -34,14 +34,5 @@ public:
 
     std::vector<std::pair<double, Node*>> predictNexts(Node* node, double timeSpentHere, double maxT, int tripID, unsigned int flags);
 
-    inline int getSize(){
-        int size = 0;
-        for (auto it: graph)
-        {
-            size+= sizeof(graph[it.first]);
-            for (auto node : it.second)
-                size+= sizeof(node);
-        }
-        return size;
-    }
+    int getSize();
 };

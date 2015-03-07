@@ -1,10 +1,20 @@
 {
-    "interval": 15,         //Expected interval
-    "maxinterval": 10,      //Maximum expected intervals
-    "multiplier": 1000,     //Multiplier for X,Y coords
-    "maxopt": 3,            //Maximum options considered
-    "maxFuture": 1,         //Maximum depth in seconds
-    "timeInMs": false,      //Is the EPOCH in milliseconds?
-    "testTime": true,       //Test for time?
-    "testSize": false       //Test for size?
+    //Expected interval
+    "interval": 15,
+    //Maximum expected intervals
+    "maxinterval": 10,
+    //Multiplier for X,Y coords
+    "multiplier": 1000,
+    //Maximum options considered
+    "maxopt": 3,
+    //Maximum depth in seconds
+    "maxFuture": 1,
+    //Is the EPOCH in milliseconds?
+    "timeInMs": false,
+    //Test for time?
+    "testTime": true,
+    //Test for size?
+    "testSize": true,
+    //Time interval from 0 to 23
+    "timeInterval": [0, 4, 8, 11, 14, 17, 19, 21, 23]
 }

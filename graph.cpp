@@ -122,6 +122,15 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
 	return probPairs;
 }
 
+int Graph::getSize()
+{
+    int size = allNodes.size()*sizeof(Node);
+    size+= sizeof(whereAmI);
+    for (auto nodes : graph)
+        size+= nodes.second.size()*sizeof(Node*);
+    return size;
+}
+
 void Graph::print()
 {
 	for (auto sa : graph)

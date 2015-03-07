@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     
     configPath = "config.json";
     fileName = "default";
-    std::ofstream statFile;
+    std::ofstream statFileSize, statFileTime;
 
     while ((opt = getopt(argc, argv, "c:n:")) != -1)
 	{
@@ -75,9 +75,9 @@ int main(int argc, char* argv[])
     tripID = 0;
 
     if (config->testTime)
-        statFile.open(fileName + ".time");
-    else if (config->testSize)
-        statFile.open(fileName + ".size");
+        statFileTime.open(fileName + ".time");
+    if (config->testSize)
+        statFileSize.open(fileName + ".size");
 
     while(std::cin >> ts >> xl >> yl)
     {
@@ -111,9 +111,8 @@ int main(int argc, char* argv[])
             startTime = std::chrono::high_resolution_clock::now();
         auto prediction = g->predictNexts(g->getNode(node), node->getAvgWait(), timeToNextData, tripID, phero::NOCIRCLE);
         if (config->testTime)
-            statFile << std::chrono::duration_cast<std::chrono::nanoseconds>(
+            statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
-
         
         predictionNode->set(node->getX(), node->getY(), node->getDirection());
         //Get the correct node to compare/predict
@@ -137,6 +136,9 @@ int main(int argc, char* argv[])
 
         //Update the graph
         g->insert(node, tripID);
+        //Testing size?
+        if (config->testSize)
+            statFileSize << g->getSize() << std::endl;
 
         std::cout << predictionProb << ' ' << *oldNode << ' ' << *node << ' ' << 
             ((predictionNode) ? predictionNode->getID() : "NULL") << ' ' << ts << ' ' << tripID << std::endl;
@@ -149,4 +151,6 @@ int main(int argc, char* argv[])
         lastTs = ts;
         oldNode->set(node->getX(), node->getY(), node->getDirection());
     }
+    statFileTime.close();
+    statFileSize.close();
 }

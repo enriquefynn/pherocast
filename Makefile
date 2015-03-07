@@ -5,7 +5,7 @@ all: parser.o node.o graph.o config.o jsoncpp.o
 	$(CC) $(CCFLAGS) node.o graph.o parser.o jsoncpp.o config.o -o main
 parser.o: parser.cpp
 	$(CC) $(CCFLAGS) -c parser.cpp
-node.o: node.cpp
+node.o: node.cpp node.hpp
 	$(CC) $(CCFLAGS) -c node.cpp
 graph.o: graph.cpp graph.hpp
 	$(CC) $(CCFLAGS) -c graph.cpp

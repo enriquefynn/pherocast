@@ -15,7 +15,5 @@ Config::Config(std::string filestr)
     timeInMs = root["timeInMs"].asBool();
     testTime = root["testTime"].asBool();
     testSize = root["testSize"].asBool();
-    if (testTime && testSize)
-        throw "ERROR: Can\'t test both size and time (testTime and testSize)";
     ifs.close();
 }
