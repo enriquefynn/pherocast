@@ -15,5 +15,6 @@ Config::Config(std::string filestr)
     timeInMs = root["timeInMs"].asBool();
     testTime = root["testTime"].asBool();
     testSize = root["testSize"].asBool();
+    useCoord = root["useCoord"].asBool();
     ifs.close();
 }

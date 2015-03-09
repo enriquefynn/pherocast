@@ -17,6 +17,7 @@ namespace phero{
 class Graph
 {
     std::unordered_map<Node*, std::unordered_set<Node*>> graph;	/*The Graph*/
+    size_t size = sizeof(Node*); /*Size in bytes init size of whereAmI*/
 	Node *whereAmI = NULL;
     std::unordered_map<std::string, Node*> allNodes;
 
@@ -34,5 +35,5 @@ public:
 
     std::vector<std::pair<double, Node*>> predictNexts(Node* node, double timeSpentHere, double maxT, int tripID, unsigned int flags);
 
-    int getSize();
+    inline size_t getSize(){return size;}
 };

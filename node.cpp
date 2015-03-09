@@ -20,16 +20,20 @@ Node::Node(int x, int y, char dir, int tripID)
 
 char Node::getDirection(int x, int y, int ox, int oy)
 {
-    int angle = atan2(y - oy, ox - ox) * 180. / M_PI;
+    double angle = atan2(y - oy, x - ox);
+    if (angle < 0)
+        angle = 2*M_PI + angle;
+    angle *= 180. / M_PI;
     if ((angle >= 315) || (angle < 45))
         return 'E';
-    if ((angle >= 45) && (angle < 135))
+    else if ((angle >= 45) && (angle < 135))
         return 'N';
-    if ((angle >= 135) && (angle < 225))
+    else if ((angle >= 135) && (angle < 225))
         return 'W';
-    if ((angle >= 225) && (angle < 315))
+    else if ((angle >= 225) && (angle < 315))
         return 'S';
-    return '?';
+    else
+        return '?';
 }
 
 void Node::leave()

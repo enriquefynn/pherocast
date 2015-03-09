@@ -12,6 +12,7 @@ struct Config{
     bool timeInMs = true;
     bool testTime = false;
     bool testSize = false;
+    bool useCoord = false;
 
     Config(std::string configFile);
     friend std::ostream& operator<< (std::ostream &out, const Config &config)
@@ -22,7 +23,8 @@ struct Config{
         "\n\tMultiplier: " << config.multiplier << 
         "\n\tMaximum Opts: " << config.maxopt <<
         "\n\tPrediction in future: " << config.maxFuture <<
-        "\n\tTime in ms: " << config.timeInMs;
+        "\n\tTime in ms: " << ((config.timeInMs) ? "True" : "False") <<
+        "\n\tUsing NSWE coordinades: " << ((config.useCoord) ? "True" : "False");
         if (config.testTime)
             out << "\n\tTesting time";
         if (config.testSize)

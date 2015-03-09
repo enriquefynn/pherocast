@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
         //Get the correct node to compare/predict
         x = config->multiplier*xl;
         y = config->multiplier*yl;
-        node->set(x, y, node->getDirection(x, y, lastX, lastY));
+        node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
 
         double predictionProb = 0;
         for (unsigned int i = 0; i < prediction.size(); ++i)

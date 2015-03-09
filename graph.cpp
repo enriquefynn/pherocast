@@ -24,6 +24,9 @@ void Graph::createNode(Node *node, int tripN)
         whereAmI->leave();
     }
     whereAmI = newNode;
+
+    //Update the size of the graph
+    size+= sizeof(Node);
 }
 
 /** Inserts a node in the graph
@@ -49,6 +52,9 @@ void Graph::insert(Node *node, int tripN)
         graph[whereAmI].insert(allNodes[node->getID()]);
         whereAmI = allNodes[node->getID()];
         whereAmI->enter(tripN);
+        
+        //Update the Size of the graph
+        size+=sizeof(Node*);
     }
 }
 
@@ -120,15 +126,6 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
     //for (auto pair: probPairs)
     //    std::cout << pair.first << " " << *pair.second << std::endl;
 	return probPairs;
-}
-
-int Graph::getSize()
-{
-    int size = allNodes.size()*sizeof(Node);
-    size+= sizeof(whereAmI);
-    for (auto nodes : graph)
-        size+= nodes.second.size()*sizeof(Node*);
-    return size;
 }
 
 void Graph::print()
