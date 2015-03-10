@@ -112,19 +112,14 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
     std::vector<std::pair<double, Node*>> probPairs;
     std::vector<Node*> probNodes = dfs(visited, node, maxT, 0, flags);
 	double all = 0;
-    //std::cout << "HAS NODES: " << std::endl;
 	for (auto no : probNodes)
 	{
-        //std::cout << "NODE: " << *no << std::endl;
 		no->visit(tripID);
 		all+= no->timeCoef;
 	}
 	for (auto no : probNodes)
 		probPairs.push_back(std::make_pair(no->timeCoef/all, no));
 	sort(probPairs.begin(),probPairs.end());
-    //std::cout << "PREDICTIC: ";
-    //for (auto pair: probPairs)
-    //    std::cout << pair.first << " " << *pair.second << std::endl;
 	return probPairs;
 }
 

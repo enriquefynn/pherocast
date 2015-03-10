@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     bool makingNewTrip = false;
     char opt;
     std::string configPath, fileName;
-    
+
     configPath = "config.json";
     fileName = "default";
     std::ofstream statFileSize, statFileTime;
@@ -141,7 +141,8 @@ int main(int argc, char* argv[])
             statFileSize << g->getSize() << std::endl;
 
         std::cout << predictionProb << ' ' << *oldNode << ' ' << *node << ' ' << 
-            ((predictionNode) ? predictionNode->getID() : "NULL") << ' ' << ts << ' ' << tripID << std::endl;
+            ((predictionNode) ? predictionNode->getID() : "NULL") << ' ' << ts << ' ' << 
+            g->getNodesSize() << ' ' << tripID << std::endl;
 
         //Update the past
         lastX = x;
