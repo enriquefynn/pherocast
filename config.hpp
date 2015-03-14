@@ -6,7 +6,7 @@
 struct Config{
     unsigned int interval = 15;
     unsigned int maxinterval = 30;
-    unsigned int multiplier = 1000;
+    double multiplier = 1000;
     unsigned int maxopt = 3;
     unsigned int maxFuture = 2;
     bool timeInMs = true;

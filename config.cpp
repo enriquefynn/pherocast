@@ -9,7 +9,7 @@ Config::Config(std::string filestr)
     ifs >> root;
     interval = root["interval"].asInt();
     maxinterval = root["maxinterval"].asInt();
-    multiplier = root["multiplier"].asInt();
+    multiplier = root["multiplier"].asDouble();
     maxopt = root["maxopt"].asInt();
     maxFuture = root["maxFuture"].asInt();
     timeInMs = root["timeInMs"].asBool();
