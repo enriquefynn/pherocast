@@ -13,6 +13,7 @@ struct Config{
     bool testTime = false;
     bool testSize = false;
     bool useCoord = false;
+    bool generateGraph = false;
 
     Config(std::string configFile);
     friend std::ostream& operator<< (std::ostream &out, const Config &config)
@@ -29,6 +30,8 @@ struct Config{
             out << "\n\tTesting time";
         if (config.testSize)
             out << "\n\tTesting size";
+        if (config.generateGraph)
+            out << "\n\tGenerating graph at the end";
         return out;
     }
 };

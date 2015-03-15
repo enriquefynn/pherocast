@@ -16,5 +16,6 @@ Config::Config(std::string filestr)
     testTime = root["testTime"].asBool();
     testSize = root["testSize"].asBool();
     useCoord = root["useCoord"].asBool();
+    generateGraph = root["generateGraph"].asBool();
     ifs.close();
 }

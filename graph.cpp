@@ -13,10 +13,12 @@ Node* Graph::getNode(Node* node)
 
 void Graph::createNode(Node *node, int tripN)
 {
+    if (allNodes.count(node->getID()))
+        return;
     Node *newNode = new Node(node->getX(), node->getY(), node->getDirection(), tripN);
-    allNodes[node->getID()] = newNode;
+    allNodes[newNode->getID()] = newNode;
     //init graph's node
-    graph[newNode] = std::unordered_set<Node*>();
+    //graph[newNode] = std::unordered_set<Node*>();
     //Update where I am
     if (whereAmI)
     {
@@ -123,15 +125,41 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
 	return probPairs;
 }
 
-void Graph::print()
+void Graph::printGraphviz(std::ofstream &out)
 {
-	for (auto sa : graph)
-	{
-        std::cout << *sa.first << '(';
-        std::cout << sa.first->getAvgWait() << "): ";
-		for (auto node : sa.second)
-			std::cout << *node << ' ';
-        std::cout << std::endl;
-	}
+    std::string node_id;
+    out << "digraph G{\n" <<
+        "\trankdir=LR;\n";
+    std::unordered_map<Node*, std::string> simplifiedIds;
+    int id = 0;
+    for (auto sa : allNodes)
+    {
+        if (sa.first != (*sa.second).getID())
+            std::cerr << "Something wrong at node with ID: " << sa.first << std::endl;
+        if (!simplifiedIds.count(sa.second))
+            simplifiedIds[sa.second] = std::to_string(id++);
+        node_id = simplifiedIds[sa.second];
+        //out << sa.first->getAvgWait() << "): ";
+        if (!graph[sa.second].empty())
+        {
+            auto node = graph[sa.second].begin();
+            out << "\t" << node_id << " -> ";
+            unsigned int i = 0;
+            for (; node != graph[sa.second].end(); node++)
+            {
+                if (i++ == graph[sa.second].size()-1)
+                    break;
+                if (!simplifiedIds.count(*node))
+                    simplifiedIds[*node] = std::to_string(id++);
+                node_id = simplifiedIds[*node];
+                out << node_id << ", ";
+            }
+            if (!simplifiedIds.count(*node))
+                simplifiedIds[*node] = std::to_string(id++);
+            node_id = simplifiedIds[*node];
+            out << node_id << ";\n";
+        }
+    }
+    out << "}\n";
 }
 

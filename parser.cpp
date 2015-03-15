@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
     configPath = "config.json";
     fileName = "default";
-    std::ofstream statFileSize, statFileTime;
+    std::ofstream statFileSize, statFileTime, graphFile;
 
     while ((opt = getopt(argc, argv, "c:n:")) != -1)
 	{
@@ -78,6 +78,8 @@ int main(int argc, char* argv[])
         statFileTime.open(fileName + ".time");
     if (config->testSize)
         statFileSize.open(fileName + ".size");
+    if (config->generateGraph)
+        graphFile.open(fileName + ".graph");
 
     while(std::cin >> ts >> xl >> yl)
     {
@@ -114,10 +116,9 @@ int main(int argc, char* argv[])
             statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
         
-        predictionNode->set(node->getX(), node->getY(), node->getDirection());
         //Get the correct node to compare/predict
-        x = config->multiplier*xl;
-        y = config->multiplier*yl;
+        x = (int)std::nearbyint(config->multiplier*xl);
+        y = (int)std::nearbyint(config->multiplier*yl);
         node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
 
         double predictionProb = 0;
@@ -131,8 +132,11 @@ int main(int argc, char* argv[])
                 predictionNode = prediction[i].second;
             }
         }
-        if (predictionProb == 0 && *node == *predictionNode)
+        if (predictionProb == 0 && *node == *oldNode)
+        {
             predictionProb = -1;
+            predictionNode = node;
+        }
 
         //Update the graph
         g->insert(node, tripID);
@@ -152,6 +156,11 @@ int main(int argc, char* argv[])
         lastTs = ts;
         oldNode->set(node->getX(), node->getY(), node->getDirection());
     }
+
+    if (config->generateGraph)
+        g->printGraphviz(graphFile);
+    
     statFileTime.close();
     statFileSize.close();
+    graphFile.close();
 }

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <map>
+#include <fstream>
+#include <algorithm>
+#include <iostream>
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
@@ -29,13 +32,12 @@ public:
 	void insert(Node *node, int tripN);
     void startNewTrip(Node *node, int tripN);
 
-	void print();
-    
     Node* getNode(Node* node);
 
     std::vector<std::pair<double, Node*>> predictNexts(Node* node, double timeSpentHere, double maxT, int tripID, unsigned int flags);
 
     inline size_t getSize(){return size;}
     inline size_t getNodesSize(){return allNodes.size();}
+    void printGraphviz(std::ofstream &out);
 };
 
