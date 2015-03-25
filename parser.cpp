@@ -14,7 +14,6 @@ int main(int argc, char* argv[])
     int yday;
     long ts, lastTs, timeToNextData;
     double xl, yl;
-    bool makingNewTrip = false;
     char opt;
     std::string configPath, fileName;
 
@@ -95,14 +94,12 @@ int main(int argc, char* argv[])
         {
             std::cerr << "Making new trip at: " << std::asctime(formatedTime);
             ++tripID;
-            makingNewTrip = true;
             g->startNewTrip(node, tripID);
             yday = formatedTime->tm_yday;
         }
-        if (!makingNewTrip && timeToNextData > config->maxinterval*config->interval)
+        else if (timeToNextData > config->maxinterval*config->interval)
         {
-            std::cerr << "Something strange at ts: " << ts << " deltaTS: " << timeToNextData << std::endl;
-            makingNewTrip = false;
+            std::cerr << "Not enough logs at: " << ts << " deltaTS: " << timeToNextData << std::endl;
         }
 
         //Try to predict
