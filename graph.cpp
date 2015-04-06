@@ -11,7 +11,7 @@ Node* Graph::getNode(Node* node)
     return allNodes[node->getID()];
 }
 
-void Graph::createNode(Node *node, int tripN)
+void Graph::createNode(Node *node, int tripN, long deltaTime)
 {
     if (allNodes.count(node->getID()))
         return;
@@ -22,8 +22,9 @@ void Graph::createNode(Node *node, int tripN)
     //Update where I am
     if (whereAmI)
     {
+        whereAmI->visit(tripN);
         graph[whereAmI].insert(newNode);
-        whereAmI->leave();
+        whereAmI->leave(deltaTime);
     }
     whereAmI = newNode;
 
@@ -36,21 +37,21 @@ void Graph::createNode(Node *node, int tripN)
  * \param y Y coordinate
  * \param tripN The Nth trip
 */
-void Graph::insert(Node *node, int tripN)
+void Graph::insert(Node *node, int tripN, long deltaTime)
 {
 	//There isn't a key yet
 	if (!allNodes.count(node->getID()))
 	{
-        createNode(node, tripN);
+        createNode(node, tripN, deltaTime);
         return;
 	}
     //Are we waiting in the same node?
     if (*whereAmI == *node)
-        whereAmI->wait();
+        whereAmI->wait(deltaTime);
     else
     {
-        whereAmI->enter(tripN);
-        whereAmI->leave();
+        whereAmI->visit(tripN);
+        whereAmI->leave(deltaTime);
         graph[whereAmI].insert(allNodes[node->getID()]);
         whereAmI = allNodes[node->getID()];
         whereAmI->enter(tripN);
@@ -62,14 +63,14 @@ void Graph::insert(Node *node, int tripN)
 
 /** Starts a new trip at node ref node
  */
-void Graph::startNewTrip(Node *node, int tripN)
+void Graph::startNewTrip(Node *node, int tripN, long deltaTime)
 {
     if (!allNodes.count(node->getID()))
     {
-        createNode(node, tripN);
+        createNode(node, tripN, deltaTime);
         return;
     }
-    whereAmI->leave();
+    whereAmI->leave(deltaTime);
     whereAmI = allNodes[node->getID()];
 }
 
@@ -89,7 +90,7 @@ std::vector<Node*> Graph::dfs(std::unordered_map<Node*, bool> &visited, Node *no
             return probNodes;
         visited[node] = true;
     }
-    //std::cout << "ENTERING: " << *node << " MaxT: " << maxT << " LocalT: " << localT << " AVG: " << node->getAvgWait() << std::endl;
+    //std::cerr << "ENTERING: " << *node << " MaxT: " << maxT << " LocalT: " << localT << " AVG: " << node->getAvgWait() << std::endl;
 	if (node->getAvgWait() + localT > maxT)
     {
         probNodes.push_back(node);
@@ -102,7 +103,7 @@ std::vector<Node*> Graph::dfs(std::unordered_map<Node*, bool> &visited, Node *no
     }
 	for (auto child : graph[node])
 	{
-        std::vector<Node*> dfsProbs = dfs(visited, child, maxT, localT + child->getAvgWait(), flags);
+        std::vector<Node*> dfsProbs = dfs(visited, child, maxT, localT + node->getAvgWait(), flags);
         probNodes.insert(probNodes.end(), dfsProbs.begin(), dfsProbs.end());
 	}
     return probNodes;
@@ -112,7 +113,7 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
 {
     std::unordered_map<Node*, bool> visited;
     std::vector<std::pair<double, Node*>> probPairs;
-    std::vector<Node*> probNodes = dfs(visited, node, maxT, 0, flags);
+    std::vector<Node*> probNodes = dfs(visited, node, timeSpentHere + maxT, 0, flags);
 	double all = 0;
 	for (auto no : probNodes)
 	{
@@ -123,6 +124,16 @@ std::vector<std::pair<double, Node*>> Graph::predictNexts(Node* node, double tim
 		probPairs.push_back(std::make_pair(no->timeCoef/all, no));
 	sort(probPairs.begin(),probPairs.end());
 	return probPairs;
+}
+
+void Graph::jumpToNode(Node* node, int tripN)
+{
+    if (!allNodes.count(node->getID()))
+    {
+        Node *newNode = new Node(node->getX(), node->getY(), node->getDirection(), tripN);
+        allNodes[newNode->getID()] = newNode;
+    }
+    whereAmI = allNodes[node->getID()];
 }
 
 void Graph::printGraphviz(std::ofstream &out)
@@ -139,11 +150,11 @@ void Graph::printGraphviz(std::ofstream &out)
         if (!simplifiedIds.count(sa.second))
             simplifiedIds[sa.second] = std::to_string(id++);
         node_id = simplifiedIds[sa.second];
-        //out << sa.first->getAvgWait() << "): ";
+        node_id = sa.second->getID();
         if (!graph[sa.second].empty())
         {
             auto node = graph[sa.second].begin();
-            out << "\t" << node_id << " -> ";
+            out << "\t" << node_id << "[label_scheme=" << node_id << '(' << sa.second->getAvgWait() << ')' << "];" << " -> ";
             unsigned int i = 0;
             for (; node != graph[sa.second].end(); node++)
             {
@@ -152,11 +163,13 @@ void Graph::printGraphviz(std::ofstream &out)
                 if (!simplifiedIds.count(*node))
                     simplifiedIds[*node] = std::to_string(id++);
                 node_id = simplifiedIds[*node];
+                node_id = (*node)->getID();
                 out << node_id << ", ";
             }
             if (!simplifiedIds.count(*node))
                 simplifiedIds[*node] = std::to_string(id++);
             node_id = simplifiedIds[*node];
+            node_id = (*node)->getID();
             out << node_id << ";\n";
         }
     }

@@ -10,8 +10,8 @@ class Node
     char direction;     /*Heading direction */
     std::string id;
 
-    int localWait = 1;  /* Local waiting time */
-    double avgWait = 0.;/* Average waiting time */
+    long localWait = 0;  /* Local waiting time */
+    double avgWait = -1.;/* Average waiting time */
     int lastTrip;       /* Last trip ID */
 
     void setID();
@@ -26,15 +26,15 @@ public:
 
     inline std::string getID() const {return id;}
     inline double getAvgWait() {return avgWait;}
-    void wait();
+    void wait(long time);
 
     static char getDirection(int x, int y, int ox, int oy);
 
-    void leave();
+    void leave(long deltaTime);
     void enter(int tripId);
     void visit(int tripId);
 
-    inline friend bool operator== (const Node &lhs, const Node &rhs){return ((lhs.direction == rhs.direction) && (lhs.x == rhs.x) && (lhs.y == rhs.y));}
+    inline friend bool operator== (const Node &lhs, const Node &rhs){return ((lhs.x == rhs.x) && (lhs.y == rhs.y));}
 	inline friend bool operator!= (const Node &lhs, const Node &rhs) {return !(lhs == rhs);}
 	inline friend bool operator< (const Node &lhs, const Node &rhs){ return (lhs.x == rhs.x) ? (lhs.y < rhs.y): (lhs.x < rhs.x);}
 	inline friend std::ostream& operator<< (std::ostream &out, const Node &node) {out << node.id; return out;}

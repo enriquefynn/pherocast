@@ -36,29 +36,34 @@ char Node::getDirection(int x, int y, int ox, int oy)
         return '?';
 }
 
-void Node::leave()
+void Node::leave(long time)
 {
-    avgWait = (1. - sigma)*avgWait + sigma*localWait; 
-    localWait = 1; 
+    localWait+= time;
+    if (avgWait == -1)
+        avgWait = localWait;
+    else
+        avgWait = (1. - sigma)*avgWait + sigma*localWait; 
+    localWait = 0; 
 }
 
-void Node::wait()
+void Node::wait(long time)
 {
-    ++localWait;
+    localWait += time;
 }
 
 void Node::enter(int tripID)
 {
     int deltaTrip = tripID - lastTrip;
-    localWait = 1; 
     timeCoef = timeCoef*pow(1. - sigma, deltaTrip) + sigma;
     lastTrip = tripID;
+    localWait = 0;
 }
 
 /* Only look to timeCoef */
 void Node::visit(int tripID)
 {
-    timeCoef = timeCoef*pow(1. - sigma, tripID - lastTrip);
+    int deltaTrip = tripID - lastTrip;
+    timeCoef = timeCoef*pow(1. - sigma, deltaTrip) + sigma;
     lastTrip = tripID;
 }
 

@@ -25,14 +25,15 @@ class Graph
     std::unordered_map<std::string, Node*> allNodes;
 
     std::vector<Node*> dfs(std::unordered_map<Node*, bool> &visited, Node *node, double maxT, double localT, unsigned int flags);
-    void createNode(Node *node, int tripN);
+    void createNode(Node *node, int tripN, long deltaTime);
 
 public:
 	inline Graph(){}
-	void insert(Node *node, int tripN);
-    void startNewTrip(Node *node, int tripN);
+	void insert(Node *node, int tripN, long deltaTime);
+    void startNewTrip(Node *node, int tripN, long deltaTime);
 
     Node* getNode(Node* node);
+    void jumpToNode(Node* node, int tripN);
 
     std::vector<std::pair<double, Node*>> predictNexts(Node* node, double timeSpentHere, double maxT, int tripID, unsigned int flags);
 

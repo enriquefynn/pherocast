@@ -8,13 +8,20 @@
 #include "node.hpp"
 #include "config.hpp"
 
+enum {NOT_SKIPPING, SKIPPING, SKIPPED};
+
 int main(int argc, char* argv[])
 {
     unsigned int x, y, lastX, lastY, tripID, lastTrip;
     int yday;
-    long ts, lastTs, timeToNextData;
+    long ts, lastTs, timeToNextData, timeWaiting;
     double xl, yl;
     char opt;
+    bool makingNewTrip;
+    int skipThis; /*0: Not skipping 1: skipping 2: Skipped last*/
+
+    std::vector<std::pair<double, Node*>> prediction;
+
     std::string configPath, fileName;
 
     configPath = "config.json";
@@ -71,7 +78,10 @@ int main(int argc, char* argv[])
     std::cerr << *config << std::endl;
     lastX = lastY = lastTs = lastTrip = yday = 0;
     timeToNextData = config->maxinterval;
+    timeWaiting = 0;
     tripID = 0;
+    makingNewTrip = false;
+    skipThis = NOT_SKIPPING;
 
     if (config->testTime)
         statFileTime.open(fileName + ".time");
@@ -85,6 +95,7 @@ int main(int argc, char* argv[])
         //It's in ms
         if (config->timeInMs)
             ts/= 1000;
+        timeToNextData = ts - lastTs;
 
         time_t time = ts;
         auto formatedTime = std::gmtime(&time);
@@ -94,24 +105,31 @@ int main(int argc, char* argv[])
         {
             std::cerr << "Making new trip at: " << std::asctime(formatedTime);
             ++tripID;
-            g->startNewTrip(node, tripID);
             yday = formatedTime->tm_yday;
+            timeToNextData = config->maxFuture;
+            makingNewTrip = true;
         }
         else if (timeToNextData > config->maxinterval*config->interval)
         {
-            std::cerr << "Not enough logs at: " << ts << " deltaTS: " << timeToNextData << std::endl;
-        }
-
-        //Try to predict
-        if (timeToNextData > config->maxFuture)
+            std::cerr << "Not enough logs at: " << ts << ' ' << lastTs << " deltaTS: " << timeToNextData << std::endl;
+            skipThis = SKIPPING;
             timeToNextData = config->maxFuture;
+        }
+        //timeToNextData = config->maxFuture;
 
         if (config->testTime)
             startTime = std::chrono::high_resolution_clock::now();
-        auto prediction = g->predictNexts(g->getNode(node), node->getAvgWait(), timeToNextData, tripID, phero::NOCIRCLE);
-        if (config->testTime)
-            statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
+
+        if (skipThis == SKIPPED)
+            g->jumpToNode(node, tripID);
+
+        if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
+        {
+            prediction = g->predictNexts(g->getNode(node), timeWaiting, timeToNextData, tripID, phero::NOCIRCLE);
+            if (config->testTime)
+                statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
+        }
         
         //Get the correct node to compare/predict
         x = (int)std::nearbyint(config->multiplier*xl);
@@ -119,39 +137,62 @@ int main(int argc, char* argv[])
         node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
 
         double predictionProb = 0;
-        for (unsigned int i = 0; i < prediction.size(); ++i)
+        if (makingNewTrip)
+            g->startNewTrip(node, tripID, timeToNextData);
+
+        if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
         {
-            if (i > config->maxopt)
-                break;
-            if (prediction[i].second == g->getNode(node))
+            for (unsigned int i = 0; i < prediction.size(); ++i)
             {
-                predictionProb = prediction[i].first;
-                predictionNode = prediction[i].second;
+                if (i == config->maxopt)
+                    break;
+                if (prediction[i].second == g->getNode(node))
+                {
+                    predictionProb = prediction[i].first;
+                    predictionNode = prediction[i].second;
+                }
             }
-        }
-        if (predictionProb == 0 && *node == *oldNode)
-        {
-            predictionProb = -1;
-            predictionNode = node;
-        }
+            //Could not predict
+            if (predictionProb == 0)
+            {
+                predictionProb = -1;
+                predictionNode = oldNode;
+            }
+            //Waiting at the same node
+            if (*node == *oldNode)
+                timeWaiting+= timeToNextData;
+            else
+            {
+                if (predictionProb == -1)
+                    predictionProb = 0;
+                timeWaiting = 0;
+            }
 
-        //Update the graph
-        g->insert(node, tripID);
-        //Testing size?
-        if (config->testSize)
-            statFileSize << g->getSize() << std::endl;
+            //Update the graph
+            if (!makingNewTrip)
+                g->insert(node, tripID, timeToNextData);
+            //Testing size?
+            if (config->testSize)
+                statFileSize << g->getSize() << std::endl;
 
-        std::cout << predictionProb << ' ' << *oldNode << ' ' << *node << ' ' << 
-            ((predictionNode) ? predictionNode->getID() : "NULL") << ' ' << ts << ' ' << 
-            g->getNodesSize() << ' ' << tripID << std::endl;
+            if (skipThis == SKIPPED)
+                std::cout << std::endl;
+            std::cout << predictionProb << ' ' << *oldNode << ' ' << *node << ' ' << 
+                ((predictionNode) ? predictionNode->getID() : "NULL") << ' ' << ts << ' ' << 
+                g->getNodesSize() << ' ' << tripID << std::endl;
+        }
 
         //Update the past
         lastX = x;
         lastY = y;
         lastTrip = tripID;
-        timeToNextData = ts - lastTs;
         lastTs = ts;
         oldNode->set(node->getX(), node->getY(), node->getDirection());
+        makingNewTrip = false;
+        if (skipThis == SKIPPED)
+            skipThis = NOT_SKIPPING;
+        else if (skipThis == SKIPPING)
+            skipThis = SKIPPED;
     }
 
     if (config->generateGraph)
@@ -160,4 +201,7 @@ int main(int argc, char* argv[])
     statFileTime.close();
     statFileSize.close();
     graphFile.close();
+
+    //new line at EOF
+    std::cout << std::endl;
 }
