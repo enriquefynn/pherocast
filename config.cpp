@@ -10,6 +10,7 @@ Config::Config(std::string filestr)
     interval = root["interval"].asInt();
     maxinterval = root["maxinterval"].asInt();
     multiplier = root["multiplier"].asDouble();
+    gapLimit = root["gapLimit"].asDouble();
     maxopt = root["maxopt"].asInt();
     maxFuture = root["maxFuture"].asInt();
     timeInMs = root["timeInMs"].asBool();

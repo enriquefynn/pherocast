@@ -5,6 +5,8 @@
     "maxinterval": 10,
     //Multiplier for X,Y coords
     "multiplier": 1000,
+    //Gap limit
+    "gapLimit": 50000000,
     //Maximum options considered
     "maxopt": 3,
     //Maximum depth in seconds

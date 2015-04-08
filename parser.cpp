@@ -10,6 +10,10 @@
 
 enum {NOT_SKIPPING, SKIPPING, SKIPPED};
 
+bool distanceGap(Node* n1, Node* n2, double gapLimit){
+    return (std::hypot(n1->getX() - n2->getX(), n1->getY() - n2->getY()) > gapLimit);
+}
+
 int main(int argc, char* argv[])
 {
     unsigned int x, y, lastX, lastY, tripID, lastTrip;
@@ -52,7 +56,8 @@ int main(int argc, char* argv[])
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
 
     Graph *g = new Graph();
-    Node *node = new Node(0, 0, 'N', 0), *oldNode = new Node(0, 0, 'N', 0), *predictionNode = new Node(0, 0, 'N', 0);
+    Node *node = new Node(0, 0, 'N', 0), *oldNode = new Node(0, 0, 'N', 0), 
+         *predictionNode = new Node(0, 0, 'N', 0);
     Config *config;
     try
     {
@@ -60,7 +65,8 @@ int main(int argc, char* argv[])
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Config path not found, using default config.json" << std::endl;
+        std::cerr << "Config path not found, using default config.json" << 
+            std::endl;
         try
         {
             config = new Config("config.json");
@@ -99,6 +105,10 @@ int main(int argc, char* argv[])
 
         time_t time = ts;
         auto formatedTime = std::gmtime(&time);
+        //Get the correct node to compare/predict
+        x = (int)std::nearbyint(config->multiplier*xl);
+        y = (int)std::nearbyint(config->multiplier*yl);
+        node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
 
         //NEW trip at TODO: 04:00
         if (yday != formatedTime->tm_yday)
@@ -111,9 +121,15 @@ int main(int argc, char* argv[])
         }
         else if (timeToNextData > config->maxinterval*config->interval)
         {
-            std::cerr << "Not enough logs at: " << ts << ' ' << lastTs << " deltaTS: " << timeToNextData << std::endl;
+            std::cerr << "Not enough logs at: " << ts << ' ' << lastTs << 
+                " deltaTS: " << timeToNextData << std::endl;
             skipThis = SKIPPING;
             timeToNextData = config->maxFuture;
+        }
+        else if (distanceGap(node, oldNode, config->gapLimit))
+        {
+            std::cerr << "Gap at " << ts << ' ' << lastTs << std::endl;
+            skipThis = SKIPPING;
         }
         //timeToNextData = config->maxFuture;
 
@@ -125,17 +141,13 @@ int main(int argc, char* argv[])
 
         if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
         {
-            prediction = g->predictNexts(g->getNode(node), timeWaiting, timeToNextData, tripID, phero::NOCIRCLE);
+            prediction = g->predictNexts(g->getNode(oldNode), timeWaiting, 
+                    timeToNextData, tripID, phero::NOCIRCLE);
             if (config->testTime)
                 statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
         }
         
-        //Get the correct node to compare/predict
-        x = (int)std::nearbyint(config->multiplier*xl);
-        y = (int)std::nearbyint(config->multiplier*yl);
-        node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
-
         double predictionProb = 0;
         if (makingNewTrip)
             g->startNewTrip(node, tripID, timeToNextData);
@@ -174,12 +186,14 @@ int main(int argc, char* argv[])
             //Testing size?
             if (config->testSize)
                 statFileSize << g->getSize() << std::endl;
-
-            if (skipThis == SKIPPED)
+            
+            if (skipThis == SKIPPED || makingNewTrip)
                 std::cout << std::endl;
-            std::cout << predictionProb << ' ' << *oldNode << ' ' << *node << ' ' << 
-                ((predictionNode) ? predictionNode->getID() : "NULL") << ' ' << ts << ' ' << 
-                g->getNodesSize() << ' ' << tripID << std::endl;
+            if (!makingNewTrip)
+                std::cout << predictionProb << ' ' << *oldNode << ' ' << *node <<
+                    ' ' << ((predictionNode) ? predictionNode->getID() : "NULL") <<
+                    ' ' << ts << ' ' << g->getNodesSize() << ' ' << tripID << 
+                    std::endl;
         }
 
         //Update the past

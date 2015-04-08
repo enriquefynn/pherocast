@@ -7,6 +7,7 @@ struct Config{
     unsigned int interval = 15;
     unsigned int maxinterval = 30;
     double multiplier = 1000;
+    double gapLimit = 50; //In metres
     unsigned int maxopt = 3;
     unsigned int maxFuture = 2;
     bool timeInMs = true;
