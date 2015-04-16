@@ -17,11 +17,11 @@ bool distanceGap(Node* n1, Node* n2, double gapLimit){
 int main(int argc, char* argv[])
 {
     unsigned int x, y, lastX, lastY, tripID, lastTrip;
-    int yday;
+    int yday, graphIdx;
     long ts, lastTs, timeToNextData, timeWaiting;
     double xl, yl;
     char opt;
-    bool makingNewTrip;
+    bool makingNewTrip, predictingWithTime;
     int skipThis; /*0: Not skipping 1: skipping 2: Skipped last*/
 
     std::vector<std::pair<double, Node*>> prediction;
@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
     //Time test
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
 
-    Graph *g = new Graph();
     Node *node = new Node(0, 0, 'N', 0), *oldNode = new Node(0, 0, 'N', 0), 
          *predictionNode = new Node(0, 0, 'N', 0);
     Config *config;
@@ -84,9 +83,9 @@ int main(int argc, char* argv[])
     std::cerr << *config << std::endl;
     lastX = lastY = lastTs = lastTrip = yday = 0;
     timeToNextData = config->maxinterval;
-    timeWaiting = 0;
-    tripID = 0;
+    timeWaiting = tripID = graphIdx = 0;
     makingNewTrip = false;
+    predictingWithTime = true;
     skipThis = NOT_SKIPPING;
 
     if (config->testTime)
@@ -95,6 +94,14 @@ int main(int argc, char* argv[])
         statFileSize.open(fileName + ".size");
     if (config->generateGraph)
         graphFile.open(fileName + ".graph");
+
+    //Generic graph
+    Graph *g = new Graph();
+
+    //Time specific graphs
+    std::vector<Graph*> timeSpecificGraphs;
+    for (unsigned int ti = 0; ti < config->timeInterval.size(); ++ti)
+        timeSpecificGraphs.push_back(new Graph());
 
     while(std::cin >> ts >> xl >> yl)
     {
@@ -109,6 +116,17 @@ int main(int argc, char* argv[])
         x = (int)std::nearbyint(config->multiplier*xl);
         y = (int)std::nearbyint(config->multiplier*yl);
         node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
+
+        //Get graphTime index, slow (but size is not big)
+        for (unsigned int idx = 0; idx < config->timeInterval.size()-1; ++idx)
+        {
+            if (formatedTime->tm_hour >= config->timeInterval[idx] &&
+                formatedTime->tm_hour < config->timeInterval[idx+1])
+                {
+                    graphIdx = idx;
+                    break;
+                }
+        }
 
         //NEW trip at TODO: 04:00
         if (yday != formatedTime->tm_yday)
@@ -137,11 +155,14 @@ int main(int argc, char* argv[])
             startTime = std::chrono::high_resolution_clock::now();
 
         if (skipThis == SKIPPED)
+        {
             g->jumpToNode(node, tripID);
+            timeSpecificGraphs[graphIdx]->jumpToNode(node, tripID);
+        }
 
         if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
         {
-            prediction = g->predictNexts(g->getNode(oldNode), timeWaiting, 
+            prediction = timeSpecificGraphs[graphIdx]->predictNexts(timeSpecificGraphs[graphIdx]->getNode(oldNode), timeWaiting, 
                     timeToNextData, tripID, phero::NOCIRCLE);
             if (config->testTime)
                 statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -150,20 +171,45 @@ int main(int argc, char* argv[])
         
         double predictionProb = 0;
         if (makingNewTrip)
+        {
             g->startNewTrip(node, tripID, timeToNextData);
+            timeSpecificGraphs[graphIdx]->startNewTrip(node, tripID, timeToNextData);
+        }
 
         if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
         {
+            //Predict with time graphs
             for (unsigned int i = 0; i < prediction.size(); ++i)
             {
                 if (i == config->maxopt)
                     break;
-                if (prediction[i].second == g->getNode(node))
+                if (prediction[i].second == timeSpecificGraphs[graphIdx]->getNode(node))
                 {
                     predictionProb = prediction[i].first;
                     predictionNode = prediction[i].second;
                 }
             }
+
+            //Could not predict with time graph
+            if (predictionProb == 0)
+            {
+                predictingWithTime = false;
+                prediction = g->predictNexts(g->getNode(oldNode), timeWaiting, 
+                    timeToNextData, tripID, phero::NOCIRCLE);
+                predictionProb = 0;
+                for (unsigned int i = 0; i < prediction.size(); ++i)
+                {
+                    if (i == config->maxopt)
+                        break;
+                    if (prediction[i].second == g->getNode(node))
+                    {
+                        predictionProb = prediction[i].first;
+                        predictionNode = prediction[i].second;
+                    }
+                }
+
+            }
+
             //Could not predict
             if (predictionProb == 0)
             {
@@ -182,10 +228,18 @@ int main(int argc, char* argv[])
 
             //Update the graph
             if (!makingNewTrip)
+            {
                 g->insert(node, tripID, timeToNextData);
+                timeSpecificGraphs[graphIdx]->insert(node, tripID, timeToNextData);
+            }
             //Testing size?
             if (config->testSize)
-                statFileSize << g->getSize() << std::endl;
+            {
+                int totalSize = g->getSize();
+                for (auto graph : timeSpecificGraphs)
+                    totalSize+= graph->getSize();
+                statFileSize << totalSize << std::endl;
+            }
             
             if (skipThis == SKIPPED || makingNewTrip)
                 std::cout << std::endl;
@@ -203,6 +257,7 @@ int main(int argc, char* argv[])
         lastTs = ts;
         oldNode->set(node->getX(), node->getY(), node->getDirection());
         makingNewTrip = false;
+        predictingWithTime = true;
         if (skipThis == SKIPPED)
             skipThis = NOT_SKIPPING;
         else if (skipThis == SKIPPING)
@@ -210,7 +265,16 @@ int main(int argc, char* argv[])
     }
 
     if (config->generateGraph)
+    {
         g->printGraphviz(graphFile);
+        for (unsigned int i = 0; i < timeSpecificGraphs.size(); ++i)
+        {
+            graphFile.close();
+            std::cerr << "SSS: " << (fileName + std::to_string(i) + ".graph") << std::endl;
+            graphFile.open(fileName + '.' + std::to_string(i) + ".graph");
+            timeSpecificGraphs[i]->printGraphviz(graphFile);
+        }
+    }
     
     statFileTime.close();
     statFileSize.close();
