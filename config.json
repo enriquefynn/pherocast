@@ -3,7 +3,7 @@
     "interval": 15,
     //Maximum expected intervals
     "maxinterval": 10,
-    //Multiplier for X,Y coords
+    //Multiplier for X,Y coords or hexgrid radius
     "multiplier": 1000,
     //Gap limit
     "gapLimit": 50000000,
@@ -21,6 +21,8 @@
     "useCoord": false,
     //Generate graph at the end
     "generateGraph": true,
+    //Use hexagonal grid
+    "hexGrid": false
     //Time interval from 0 to 23
     "timeInterval": [0, 4, 8, 11, 14, 17, 19, 21, 23]
 }
