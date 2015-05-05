@@ -16,6 +16,7 @@ struct Config{
     bool testSize = false;
     bool useCoord = false;
     bool generateGraph = false;
+    bool hexGrid = false;
     std::vector<int> timeInterval;
 
     Config(std::string configFile);
@@ -38,6 +39,8 @@ struct Config{
             out << "\n\tTesting size";
         if (config.generateGraph)
             out << "\n\tGenerating graph at the end";
+        if (config.hexGrid)
+            out << "\n\tUsing Hexagonal grid";
         return out;
     }
 };

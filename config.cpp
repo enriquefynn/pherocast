@@ -18,6 +18,7 @@ Config::Config(std::string filestr)
     testSize = root["testSize"].asBool();
     useCoord = root["useCoord"].asBool();
     generateGraph = root["generateGraph"].asBool();
+    hexGrid = root["hexGrid"].asBool();
     Json::Value intervals = root["timeInterval"];
     for (auto i : intervals)
         timeInterval.push_back(i.asInt());

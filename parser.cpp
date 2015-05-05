@@ -14,6 +14,12 @@ bool distanceGap(Node* n1, Node* n2, double gapLimit){
     return (std::hypot(n1->getX() - n2->getX(), n1->getY() - n2->getY()) > gapLimit);
 }
 
+std::pair<int, int> toHexGrid(int x, int y){
+    int xh = std::nearbyint((2.0 / std::sqrt(3)) * y / (2.0));
+    int yh = std::nearbyint((x - 2.0 * xh * (1.0/2.0))/2.0);
+    return std::make_pair(xh, yh);
+}
+
 int main(int argc, char* argv[])
 {
     unsigned int x, y, lastX, lastY, tripID, lastTrip;
@@ -112,9 +118,16 @@ int main(int argc, char* argv[])
 
         time_t time = ts;
         auto formatedTime = std::gmtime(&time);
-        //Get the correct node to compare/predict
+        //Using hexagonal grid?
         x = (int)std::nearbyint(config->multiplier*xl);
         y = (int)std::nearbyint(config->multiplier*yl);
+        if (config->hexGrid)
+        {
+            std::pair<int, int> p = toHexGrid(x, y);
+            x = p.first;
+            y = p.second;
+        }
+        //Get the correct node to compare/predict
         node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
 
         //Get graphTime index, slow (but size is not big)
