@@ -145,16 +145,19 @@ void Graph::printGraphviz(std::ofstream &out)
     int id = 0;
     for (auto sa : allNodes)
     {
-        if (sa.first != (*sa.second).getID())
-            std::cerr << "Something wrong at node with ID: " << sa.first << std::endl;
         if (!simplifiedIds.count(sa.second))
             simplifiedIds[sa.second] = std::to_string(id++);
+        out << simplifiedIds[sa.second] << ' ' << "[label=\"" << sa.second->getAvgWait() << "\"]\n";
+    }
+    for (auto sa : allNodes)
+    {
+        if (sa.first != (*sa.second).getID())
+            std::cerr << "Something wrong at node with ID: " << sa.first << std::endl;
         node_id = simplifiedIds[sa.second];
-        node_id = sa.second->getID();
         if (!graph[sa.second].empty())
         {
             auto node = graph[sa.second].begin();
-            out << "\t" << node_id << "[label_scheme=" << node_id << '(' << sa.second->getAvgWait() << ')' << "];" << " -> ";
+            out << "\t" << node_id << " -> ";
             unsigned int i = 0;
             for (; node != graph[sa.second].end(); node++)
             {
@@ -163,13 +166,11 @@ void Graph::printGraphviz(std::ofstream &out)
                 if (!simplifiedIds.count(*node))
                     simplifiedIds[*node] = std::to_string(id++);
                 node_id = simplifiedIds[*node];
-                node_id = (*node)->getID();
                 out << node_id << ", ";
             }
             if (!simplifiedIds.count(*node))
                 simplifiedIds[*node] = std::to_string(id++);
             node_id = simplifiedIds[*node];
-            node_id = (*node)->getID();
             out << node_id << ";\n";
         }
     }

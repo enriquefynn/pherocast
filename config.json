@@ -22,7 +22,7 @@
     //Generate graph at the end
     "generateGraph": true,
     //Use hexagonal grid
-    "hexGrid": false
+    "hexGrid": false,
     //Time interval from 0 to 23
     "timeInterval": [0, 4, 8, 11, 14, 17, 19, 21, 23]
 }
