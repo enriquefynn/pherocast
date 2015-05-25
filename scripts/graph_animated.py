@@ -73,7 +73,7 @@ def simData():
         y += [yLocPlot[l]]
         cummulativePercentage+= corrects[l]
         percentageCorrect = float(cummulativePercentage)/l
-        yield x, y, trips[l], corrects[l], percentageCorrect
+        yield x, y, trips[l], corrects[l], percentageCorrect, l
 
 def simPoints(simData):
     x, y = simData[0], simData[1]
@@ -81,6 +81,7 @@ def simPoints(simData):
     lines[1][0].set_data(x[-1], y[-1])
     tripText.set_text('Trip: ' + str(simData[2]))
     correctText.set_text('Correct: ' + str('%.3f' % (100*simData[4])) + '%')
+    periodText.set_text('Period:' + str(simData[5]))
     if (simData[3] == 1):
         lines[1][0].set_color('blue')
     else:
@@ -94,6 +95,7 @@ ax.set_ylim(ymin, ymax)
 ax.set_xlim(xmin, xmax)
 tripText = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 correctText = ax.text(0.05, 0.85, '', transform=ax.transAxes)
+periodText = ax.text(0.05, 0.80, '', transform=ax.transAxes)
 
 lines = [ax.plot([], [], 'g-', ms=10), ax.plot([], [], 'bo', ms=10)]
 

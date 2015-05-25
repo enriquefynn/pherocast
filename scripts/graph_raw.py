@@ -15,6 +15,7 @@ for line in fileinput.input():
         xLocPlot += [x]
         yLocPlot += [y]
 
-plt.plot(xLocPlot, yLocPlot, 'r.')
+plt.plot(xLocPlot, yLocPlot, 'r,')
+plt.savefig('rawfig.png')
 
 plt.show();
