@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 import fileinput
 import select, sys
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -15,6 +16,7 @@ xCorPlot = []
 yCorPlot = []
 trips = []
 corrects = []
+timestamps = []
 
 xmax = -10000000000
 xmin = 10000000000
@@ -40,6 +42,7 @@ for line in fileinput.input():
         ymin = min(ymin, int(line[2]))
     xLocPlot+= [int(line[1])]
     yLocPlot+= [int(line[2])]
+    timestamps+= [int(line[-3])]
     if totalLine > 2:
         dist = hypot(xLocPlot[-2] - xLocPlot[-1], yLocPlot[-2] - yLocPlot[-1])
         if dist > 50:
@@ -73,7 +76,7 @@ def simData():
         y += [yLocPlot[l]]
         cummulativePercentage+= corrects[l]
         percentageCorrect = float(cummulativePercentage)/l
-        yield x, y, trips[l], corrects[l], percentageCorrect, l
+        yield x, y, trips[l], corrects[l], percentageCorrect, timestamps[l]
 
 def simPoints(simData):
     x, y = simData[0], simData[1]
@@ -81,7 +84,7 @@ def simPoints(simData):
     lines[1][0].set_data(x[-1], y[-1])
     tripText.set_text('Trip: ' + str(simData[2]))
     correctText.set_text('Correct: ' + str('%.3f' % (100*simData[4])) + '%')
-    periodText.set_text('Period:' + str(simData[5]))
+    periodText.set_text('Period: ' + (datetime.datetime.utcfromtimestamp(simData[5])).strftime("%d/%m/%Y %H:%M"))
     if (simData[3] == 1):
         lines[1][0].set_color('blue')
     else:

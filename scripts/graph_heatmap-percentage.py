@@ -67,7 +67,7 @@ def getMap(filename, cap = 1):
             (1.0, 0.0, 0.0))}, 256)
 
     print(len(xCorPlot))
-    plt.hist2d(xCorPlot, yCorPlot, bins=200, cmap=cmap)
+    plt.hist2d([1,2,3,4,4,4,4,4], [1,2,3,4,4,4,4,4], bins=4, cmap=cmap)
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
 
