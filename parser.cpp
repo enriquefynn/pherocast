@@ -131,16 +131,19 @@ int main(int argc, char* argv[])
         node->set(x, y, (config->useCoord) ? node->getDirection(x, y, lastX, lastY): 'N');
 
         //Get graphTime index, slow (but size is not big)
-        for (unsigned int idx = 0; idx < config->timeInterval.size()-1; ++idx)
-        {
-            if (formatedTime->tm_hour >= config->timeInterval[idx] &&
-                formatedTime->tm_hour < config->timeInterval[idx+1])
-                {
-                    graphIdx = idx;
-                    break;
-                }
-        }
-
+        unsigned int idx;
+        if (!config->timeInterval.size())
+            graphIdx = -1;
+        else
+            for (idx = 0; idx < config->timeInterval.size()-1; ++idx)
+            {
+                if (formatedTime->tm_hour >= config->timeInterval[idx] &&
+                    formatedTime->tm_hour < config->timeInterval[idx+1])
+                    {
+                        graphIdx = idx;
+                        break;
+                    }
+            }
         //NEW trip at TODO: 04:00
         if (yday != formatedTime->tm_yday)
         {
@@ -170,23 +173,28 @@ int main(int argc, char* argv[])
         if (skipThis == SKIPPED)
         {
             g->jumpToNode(node, tripID);
-            timeSpecificGraphs[graphIdx]->jumpToNode(node, tripID);
+            if (graphIdx != -1)
+                timeSpecificGraphs[graphIdx]->jumpToNode(node, tripID);
         }
 
         if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
         {
-            prediction = timeSpecificGraphs[graphIdx]->predictNexts(timeSpecificGraphs[graphIdx]->getNode(oldNode), timeWaiting, 
+            if (graphIdx != -1)
+            {
+                prediction = timeSpecificGraphs[graphIdx]->predictNexts(timeSpecificGraphs[graphIdx]->getNode(oldNode), timeWaiting, 
                     timeToNextData, tripID, phero::NOCIRCLE);
-            if (config->testTime)
-                statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
+                if (config->testTime)
+                    statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
+            }
         }
         
         double predictionProb = 0;
         if (makingNewTrip)
         {
             g->startNewTrip(node, tripID, timeToNextData);
-            timeSpecificGraphs[graphIdx]->startNewTrip(node, tripID, timeToNextData);
+            if (graphIdx != -1)
+                timeSpecificGraphs[graphIdx]->startNewTrip(node, tripID, timeToNextData);
         }
 
         if (skipThis == SKIPPED || skipThis == NOT_SKIPPING)
@@ -196,7 +204,7 @@ int main(int argc, char* argv[])
             {
                 if (i == config->maxopt)
                     break;
-                if (prediction[i].second == timeSpecificGraphs[graphIdx]->getNode(node))
+                if (graphIdx != -1 && prediction[i].second == timeSpecificGraphs[graphIdx]->getNode(node))
                 {
                     predictionProb = prediction[i].first;
                     predictionNode = prediction[i].second;
@@ -207,8 +215,13 @@ int main(int argc, char* argv[])
             if (predictionProb == 0)
             {
                 predictingWithTime = false;
+                if (config->testTime)
+                    startTime = std::chrono::high_resolution_clock::now();
                 prediction = g->predictNexts(g->getNode(oldNode), timeWaiting, 
                     timeToNextData, tripID, phero::NOCIRCLE);
+                if (config->testTime)
+                    statFileTime << std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::high_resolution_clock::now()-startTime).count() << std::endl;
                 predictionProb = 0;
                 for (unsigned int i = 0; i < prediction.size(); ++i)
                 {
@@ -243,7 +256,8 @@ int main(int argc, char* argv[])
             if (!makingNewTrip)
             {
                 g->insert(node, tripID, timeToNextData);
-                timeSpecificGraphs[graphIdx]->insert(node, tripID, timeToNextData);
+                if (graphIdx != -1)
+                    timeSpecificGraphs[graphIdx]->insert(node, tripID, timeToNextData);
             }
             //Testing size?
             if (config->testSize)
