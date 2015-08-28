@@ -23,6 +23,10 @@ def getMap(filename):
         line = line.split()
         x = int(line[1])
         y = int(line[2])
+        if x <= 0 or y <= 0:
+            continue
+        if y >= 13000:
+            continue
         if line[0] != '0':
             xCorPlot += [int(line[1])]
             yCorPlot += [int(line[2])]

@@ -18,10 +18,10 @@ trips = []
 corrects = []
 timestamps = []
 
-xmax = -10000000000
-xmin = 10000000000
-ymax = -10000000000
-ymin = 10000000000
+xmax = float('-inf')
+ymax = float('-inf')
+xmin = float('inf')
+ymin = float('inf')
 
 for line in fileinput.input():
     totalLine+=1
@@ -43,7 +43,7 @@ for line in fileinput.input():
     xLocPlot+= [int(line[1])]
     yLocPlot+= [int(line[2])]
     timestamps+= [int(line[-3])]
-    if totalLine > 2:
+    if totalLine > 2 and len(xLocPlot) >= 2:
         dist = hypot(xLocPlot[-2] - xLocPlot[-1], yLocPlot[-2] - yLocPlot[-1])
         if dist > 50:
             xLocPlot.pop()

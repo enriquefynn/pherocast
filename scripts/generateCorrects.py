@@ -3,6 +3,7 @@ import re, sys, fileinput
 
 totalLine = 0
 nCorrects = 0
+nIncorrects = 0
 nNodes = 0
 for line in fileinput.input():
     totalLine+=1
@@ -11,8 +12,10 @@ for line in fileinput.input():
     line = line.split()
     if line[0] != '0':
         nCorrects+=1
+    else:
+        nIncorrects+=1
     nNodes = int(line[-2])
 potential = float(100* (totalLine-nNodes)) / totalLine
-actual = 100*nCorrects/float(totalLine)
+actual = 100*nCorrects/float(nIncorrects+nCorrects)
 
 print("{0:.2f} {1:.2f}".format(actual, potential))

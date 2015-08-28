@@ -1,10 +1,7 @@
 #!/usr/bin/env python2
 import re, sys, fileinput
-from matplotlib import pyplot as PLT
-from matplotlib import cm as CM
-from matplotlib import mlab as ML
-import numpy as NP
-
+from matplotlib import pyplot as plt
+import seaborn as sns
 totalLine = 0
 nCorrects = 0
 yLocPlot = []
@@ -29,23 +26,15 @@ for line in fileinput.input():
         xLocPlot = []
         yLocPlot = []
 
-x = y = NP.linspace(-5, 5, 100)
-X, Y = NP.meshgrid(xCorPlot[:1000], yCorPlot[:1000])
-Z1 = ML.bivariate_normal(X, Y, 2, 2, 0, 0)
-Z2 = ML.bivariate_normal(X, Y, 4, 1, 1, 1)
-ZD = Z2 - Z1
-x = X.ravel()
-y = Y.ravel()
-z = ZD.ravel()
-gridsize=30
-PLT.subplot(111)
+import numpy as np
+cmap = plt.cm.gist_heat_r
+hexmap = sns.jointplot(np.array(xCorPlot), np.array(yCorPlot), stat_func=None, kind='hex', space=0, bins=40)
 
-# if 'bins=None', then color of each hexagon corresponds directly to its count
-# 'C' is optional--it maps values to x-y coordinates; if 'C' is None (default) then 
-# the result is a pure 2D histogram 
+ax = hexmap.ax_joint
 
-PLT.hexbin(X, Y, C=z, cmap=CM.jet, bins=None)
+ax.set_xlim(min(xCorPlot), max(xCorPlot))
+ax.set_ylim(min(yCorPlot), max(yCorPlot))
 
-cb = PLT.colorbar()
-cb.set_label('valor')
-PLT.show()
+#ax.tick_params(labelbottom='off', labelleft='off')
+
+plt.show()

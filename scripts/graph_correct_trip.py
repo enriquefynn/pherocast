@@ -35,8 +35,11 @@ for line in fileinput.input():
         ymin = min(ymin, int(line[2]))
         xLocPlot+= [int(line[1])]
         yLocPlot+= [int(line[2])]
+plt.plot([], [], 'b.', label='Correct Forecast')
+plt.plot([], [], 'r-', label='Visited Point')
 
 print xmin, xmax, ymin, ymax
+plt.legend()
 plt.savefig('correctPredictions.png')
 plt.show()
 
